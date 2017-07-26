@@ -58,124 +58,134 @@ void StockGrid::mousePressEvent(QMouseEvent* event)
 
 void StockGrid::keyPressEvent2(QKeyEvent* event)
 {
-    if( mousePoint.x() > getMarginLeft()+ getGridWidth() )
-        return;
-    if( mousePoint.x() < getMarginLeft() )
-        return;
+	if (mousePoint.x() > getMarginLeft() + getGridWidth())
+		return;
+	if (mousePoint.x() < getMarginLeft())
+		return;
 
-    isKeyDown = true;
-    currentIndex = (double)( mousePoint.x() - getMarginLeft() ) /
-                   (getGridWidth()) * totalIndex + startIndex;
-
-
-    switch(event->key())
-    {
-
-    case Qt::Key_Left:
-    {
-        double xstep = getGridWidth() / totalIndex ;
-        currentIndex--;
-
-        if( mousePoint.x() - xstep < getMarginLeft())
-        {
-            if( startIndex -1 < 0)
-                return;
-            endIndex -= 1;
-            startIndex -= 1;
-        }
-        else
-        {
-            mousePoint.setX(mousePoint.x() - xstep);
-        }
+	isKeyDown = true;
+	currentIndex = (double)(mousePoint.x() - getMarginLeft()) /
+		(getGridWidth()) * totalIndex + startIndex;
 
 
-        update();
-        break;
-    }
+	switch (event->key())
+	{
+
+	case Qt::Key_Left:
+	{
+		double xstep = getGridWidth() / totalIndex;
+		currentIndex--;
+
+		if (mousePoint.x() - xstep < getMarginLeft())
+		{
+			if (startIndex == 0)
+				return;
+			endIndex -= 1;
+			startIndex -= 1;
+		}
+		else
+		{
+			mousePoint.setX(mousePoint.x() - xstep);
+		}
+		update();
+		break;
+	}
 
 
-    case Qt::Key_Right:
-    {
-        double xstep = getGridWidth() / totalIndex ;
-
-
-		if (currentIndex + 1 >= pData->kline.size() - 1)
-			return;
-        currentIndex++;
+	case Qt::Key_Right:
+	{
+		double xstep = getGridWidth() / totalIndex;
+		currentIndex++;
 
 		if (mousePoint.x() + xstep > getWidgetWidth() - getMarginRight())
 		{
-			if (endIndex + 1 > pData->kline.size() - 1)
+			if (endIndex == pData->kline.size() - 1)
 				return;
 			endIndex += 1;
 			startIndex += 1;
 		}
 		else
-            mousePoint.setX(mousePoint.x() + xstep);
-        update();
-        break;
-    }
+			mousePoint.setX(mousePoint.x() + xstep);
+		update();
+		break;
+	}
 
-    case Qt::Key_Up:
-    {
-        totalIndex = totalIndex /2;
+	case Qt::Key_Up:
+	{
+		totalIndex = totalIndex / 2;
 
-        //最少显示10个
-        if( totalIndex < 10)
-        {
-            totalIndex *= 2;
-            return;
-        }
+		//最少显示10个
+		if (totalIndex < 50)
+		{
+			totalIndex *= 2;
+			return;
+		}
+
+		endIndex = currentIndex + totalIndex / 2 + 1;
+		startIndex = currentIndex - totalIndex / 2;
+
+		if (endIndex > pData->kline.size() - 1)
+		{
+			endIndex = pData->kline.size() - 1;
+			startIndex = endIndex - totalIndex + 1;
+			totalIndex = endIndex - startIndex + 1;
+			update();
+			break;
+		}
+		if (startIndex < 0)
+		{
+			startIndex = 0;
+			endIndex = startIndex + totalIndex - 1;
+			totalIndex = endIndex - startIndex + 1;
+			update();
+			break;
+		}
+		totalIndex = endIndex - startIndex + 1;
+		update();
+		break;
+	}
 
 
-        endIndex = currentIndex + totalIndex/2;
-        startIndex = currentIndex - totalIndex/2;
+	case Qt::Key_Down:
+	{
+		if (totalIndex == pData->kline.size() - 1)
+			return;
 
-        if( endIndex > pData->kline.size() -1)
-        {
-            endIndex = pData->kline.size() -1;
-            startIndex = endIndex - totalIndex;
-        }
+		totalIndex = totalIndex * 2;
+		if (totalIndex > pData->kline.size() - 1)
+		{
+			totalIndex = pData->kline.size() - 1;
+		}
 
-        if(startIndex < 0 )
-        {
-            startIndex = 0;
-            endIndex = startIndex + totalIndex;
-        }
-        update();
-        break;
-    }
+		endIndex = currentIndex + totalIndex / 2 + 1;
+		startIndex = currentIndex - totalIndex / 2;
 
 
-    case Qt::Key_Down:
-    {
-        if(totalIndex == pData->kline.size() -1 )
-            return;
+		if (endIndex > pData->kline.size() - 1)
+		{
+			endIndex = pData->kline.size() - 1;
+			startIndex = endIndex - totalIndex + 1;
+			totalIndex = endIndex - startIndex + 1;
+			update();
+			break;
+		}
 
-        totalIndex = totalIndex * 2;
-        if( totalIndex > pData->kline.size() -1)
-        {
-            totalIndex = pData->kline.size() -1;
-        }
-        endIndex = currentIndex + totalIndex/2;
-        if( endIndex > pData->kline.size() -1)
-        {
-            endIndex = pData->kline.size() -1;
-        }
+		if (startIndex < 0)
+		{
+			startIndex = 0;
+			endIndex = startIndex + totalIndex - 1;
+			totalIndex = endIndex - startIndex + 1;
+			update();
+			break;
+		}
+		totalIndex = endIndex - startIndex + 1;
+		update();
+		break;
 
-        startIndex = currentIndex - totalIndex/2;
-        if( startIndex < 0)
-            startIndex = 0;
-
-        totalIndex = endIndex - startIndex;
-
-        update();
-        break;
-
-    }
-    default:
-        break;
-    }
+	}
+	default:
+		break;
+	}
 }
 
 void StockGrid::mouseMoveEvent2(QMouseEvent* event)
@@ -202,8 +212,8 @@ void StockGrid::initial()
 
     endIndex = pData->kline.size() - 1 ;
     totalIndex = 200;
-    startIndex = endIndex - totalIndex;
-    currentIndex = startIndex + totalIndex / 2;
+	startIndex = endIndex - totalIndex + 1;
+	currentIndex = startIndex + totalIndex / 2;
 
     if( startIndex < 0)
     {
@@ -409,10 +419,10 @@ void StockGrid::drawCorssHorLineKeyDown(double start , double end,int types)
     switch(types)
     {
     case 0:
-        yPos = ( pData->kline[currentIndex+1].closeingPrice -  start) *yscale;
+        yPos = ( pData->kline[currentIndex].closeingPrice -  start) *yscale;
         break;
     case 1:
-        yPos = ( pData->kline[currentIndex+1].ftotalVolume /100 - start) *yscale;
+        yPos = ( pData->kline[currentIndex].ftotalVolume /100 - start) *yscale;
         break;
     }
 
@@ -438,10 +448,10 @@ void StockGrid::drawTipsKeyDown(double start , double end ,int types)
     switch(types)
     {
     case 0:
-        yval = pData->kline[currentIndex+1].closeingPrice;
+        yval = pData->kline[currentIndex].closeingPrice;
         break;
     case 1:
-        yval = pData->kline[currentIndex+1].ftotalVolume /100;
+        yval = pData->kline[currentIndex].ftotalVolume /100;
         break;
     }
 
